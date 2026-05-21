@@ -3,6 +3,7 @@ out/
 *.jar
 *.db
 *.log
+jobs.txt
 .DS_Store
 .vscode/
 .idea/
