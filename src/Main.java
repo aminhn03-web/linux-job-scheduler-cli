@@ -9,6 +9,7 @@ import java.util.List;
 public class Main {
 	public static void main(String[] args) {
 		JobRepository repository = new JobRepository();
+		HistoryRepository historyRepository = new HistoryRepository();
 
 		if (args.length == 0) {
 			printHelp();
@@ -35,7 +36,11 @@ public class Main {
 				break;
 
 			case "run-job":
-				runSavedJob(args, repository);
+				runSavedJob(args, repository, historyRepository);
+				break;
+
+			case "history":
+				historyRepository.printHistory();
 				break;
 
 			default:
@@ -103,41 +108,49 @@ public class Main {
 		}
 	}
 
-	    /**
-     * Runs a saved job by its ID.
-     *
-     * Example:
-     * ./run.sh run-job 1
-     *
-     * @param args command-line arguments
-     * @param repository repository used to retrieve saved jobs
-     */
-    private static void runSavedJob(String[] args, JobRepository repository) {
-        if (args.length < 2) {
-            System.out.println("Usage: ./run.sh run-job <job-id>");
-            return;
-        }
+	/**
+	 * Runs a saved job by its ID and saves the execution result to history.
+	 *
+	 * Example:
+	 * ./run.sh run-job 1
+	 *
+	 * @param args              command-line arguments
+	 * @param repository        repository used to retrieve saved jobs
+	 * @param historyRepository repository used to save execution history
+	 */
+	private static void runSavedJob(
+			String[] args,
+			JobRepository repository,
+			HistoryRepository historyRepository) {
+		if (args.length < 2) {
+			System.out.println("Usage: ./run.sh run-job <job-id>");
+			return;
+		}
 
-        int jobId;
+		int jobId;
 
-        try {
-            jobId = Integer.parseInt(args[1]);
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid job ID. Please enter a number.");
-            return;
-        }
+		try {
+			jobId = Integer.parseInt(args[1]);
+		} catch (NumberFormatException e) {
+			System.out.println("Invalid job ID. Please enter a number.");
+			return;
+		}
 
-        Job job = repository.getJobById(jobId);
+		Job job = repository.getJobById(jobId);
 
-        if (job == null) {
-            System.out.println("No job found with ID: " + jobId);
-            return;
-        }
+		if (job == null) {
+			System.out.println("No job found with ID: " + jobId);
+			return;
+		}
 
-        System.out.println("Running job: " + job);
-        CommandExecutor executor = new CommandExecutor();
-        executor.execute(job.getCommand());
-    }
+		System.out.println("Running job: " + job);
+
+		CommandExecutor executor = new CommandExecutor();
+		int exitCode = executor.execute(job.getCommand());
+
+		historyRepository.saveExecution(job, exitCode);
+		System.out.println("Execution saved to history.");
+	}
 
 	/**
 	 * Prints available CLI commands and examples.
@@ -151,6 +164,7 @@ public class Main {
 		System.out.println("  add \"<job-name>\" \"<linux-command>\"\tSave a job");
 		System.out.println("  list\t\t\t\t\tList saved jobs");
 		System.out.println("  run-job <job-id>\t\t\tRun a saved job by ID");
+		System.out.println("  history\t\t\t\tShow execution history");
 		System.out.println();
 		System.out.println("Examples:");
 		System.out.println("  ./run.sh help");
@@ -158,5 +172,6 @@ public class Main {
 		System.out.println("  ./run.sh add \"List Files\" \"ls -la\"");
 		System.out.println("  ./run.sh list");
 		System.out.println("  ./run.sh run-job 1");
+		System.out.println("  ./run.sh history");
 	}
 }

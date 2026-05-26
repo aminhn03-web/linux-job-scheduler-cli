@@ -4,6 +4,7 @@ out/
 *.db
 *.log
 jobs.txt
+history.txt
 .DS_Store
 .vscode/
 .idea/
