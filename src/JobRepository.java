@@ -1,104 +1,94 @@
-import java.io.*;
-import java.util.*;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Handles saving and loading Job objects from local file storage.
+ * Handles database operations for saved jobs.
  *
- * For now, jobs are stored in a simple text file called jobs.txt.
- * Later, this class can be upgraded to use SQLite for persistent database
- * storage.
+ * This class uses SQLite to add, retrieve, and search jobs.
  */
 public class JobRepository {
-	private static final String JOB_FILE = "jobs.txt";
 
 	/**
-	 * Reads all saved jobs from jobs.txt.
-	 *
-	 * If the file does not exist yet, an empty list is returned.
+	 * Reads all saved jobs from the SQLite database.
 	 *
 	 * @return list of saved jobs
 	 */
 	public List<Job> getAllJobs() {
 		List<Job> jobs = new ArrayList<>();
 
-		File file = new File(JOB_FILE);
+		String sql = "SELECT id, name, command FROM jobs ORDER BY id";
 
-		if (!file.exists()) {
-			return jobs;
-		}
+		try (Connection connection = DatabaseManager.getConnection();
+				PreparedStatement statement = connection.prepareStatement(sql);
+				ResultSet resultSet = statement.executeQuery()) {
 
-		try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-			String line;
+			while (resultSet.next()) {
+				Job job = new Job(
+						resultSet.getInt("id"),
+						resultSet.getString("name"),
+						resultSet.getString("command"));
 
-			while ((line = reader.readLine()) != null) {
-				if (!line.trim().isEmpty()) {
-					jobs.add(Job.fromFileString(line));
-				}
+				jobs.add(job);
 			}
 
-		} catch (IOException e) {
-			System.out.println("Error reading jobs: " + e.getMessage());
+		} catch (SQLException e) {
+			System.out.println("Error reading jobs from database: " + e.getMessage());
 		}
 
 		return jobs;
 	}
 
 	/**
-	 * Finds a saved job by its ID.
-	 * 
-	 * @param id job ID to search for
-	 * @return matching job object, or null if no job is found
-	 */
-	public Job getJobById(int id) {
-		List<Job> jobs = getAllJobs();
-
-		for (Job job : jobs) {
-			if (job.getId() == id) {
-				return job;
-			}
-		}
-
-		return null;
-	}
-
-	/**
-	 * Adds a new job to jobs.txt.
-	 *
-	 * The job receives the next available ID based on existing saved jobs.
+	 * Adds a new job to the SQLite database.
 	 *
 	 * @param name    readable job name
 	 * @param command Linux shell command to save
 	 */
 	public void addJob(String name, String command) {
-		List<Job> jobs = getAllJobs();
-		int nextId = getNextId(jobs);
+		String sql = "INSERT INTO jobs (name, command) VALUES (?, ?)";
 
-		Job job = new Job(nextId, name, command);
+		try (Connection connection = DatabaseManager.getConnection();
+				PreparedStatement statement = connection.prepareStatement(sql)) {
 
-		try (FileWriter writer = new FileWriter(JOB_FILE, true)) {
-			writer.write(job.toFileString() + System.lineSeparator());
-			System.out.println("Job added: " + job);
+			statement.setString(1, name);
+			statement.setString(2, command);
+			statement.executeUpdate();
 
-		} catch (IOException e) {
-			System.out.println("Error saving job: " + e.getMessage());
+			System.out.println("Job added: " + name + " -> " + command);
+
+		} catch (SQLException e) {
+			System.out.println("Error saving job to database: " + e.getMessage());
 		}
 	}
 
 	/**
-	 * Finds the next available job ID.
+	 * Finds one saved job by ID.
 	 *
-	 * @param jobs existing saved jobs
-	 * @return next available ID
+	 * @param id job ID to search for
+	 * @return matching Job object, or null if no job exists
 	 */
-	private int getNextId(List<Job> jobs) {
-		int maxId = 0;
+	public Job getJobById(int id) {
+		String sql = "SELECT id, name, command FROM jobs WHERE id = ?";
 
-		for (Job job : jobs) {
-			if (job.getId() > maxId) {
-				maxId = job.getId();
+		try (Connection connection = DatabaseManager.getConnection();
+				PreparedStatement statement = connection.prepareStatement(sql)) {
+
+			statement.setInt(1, id);
+
+			try (ResultSet resultSet = statement.executeQuery()) {
+				if (resultSet.next()) {
+					return new Job(
+							resultSet.getInt("id"),
+							resultSet.getString("name"),
+							resultSet.getString("command"));
+				}
 			}
+
+		} catch (SQLException e) {
+			System.out.println("Error finding job: " + e.getMessage());
 		}
 
-		return maxId + 1;
+		return null;
 	}
 }

@@ -1,96 +1,84 @@
-import java.io.*;
+import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Handles saving and displaying job execution history.
+ * Handles database operations for job execution history.
  *
- * For now, history is stored in a local text file called history.txt.
- * Later, this class can be upgraded to store execution history in SQLite.
+ * This class stores and displays past job executions using SQLite.
  */
 public class HistoryRepository {
-    private static final String HISTORY_FILE = "history.txt";
 
     /**
-     * Saves a job execution record to history.txt.
+     * Saves a job execution record to the SQLite database.
      *
-     * @param job job that was executed
+     * @param job      job that was executed
      * @param exitCode exit code returned by the command
      */
     public void saveExecution(Job job, int exitCode) {
+        String sql = """
+                INSERT INTO history
+                (job_id, job_name, command, status, exit_code, executed_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """;
+
         String status = exitCode == 0 ? "SUCCESS" : "FAILED";
         String timestamp = getCurrentTimestamp();
 
-        String historyLine = job.getId()
-                + "|" + job.getName()
-                + "|" + job.getCommand()
-                + "|" + status
-                + "|" + exitCode
-                + "|" + timestamp;
+        try (Connection connection = DatabaseManager.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
 
-        try (FileWriter writer = new FileWriter(HISTORY_FILE, true)) {
-            writer.write(historyLine + System.lineSeparator());
-        } catch (IOException e) {
-            System.out.println("Error saving history: " + e.getMessage());
+            statement.setInt(1, job.getId());
+            statement.setString(2, job.getName());
+            statement.setString(3, job.getCommand());
+            statement.setString(4, status);
+            statement.setInt(5, exitCode);
+            statement.setString(6, timestamp);
+
+            statement.executeUpdate();
+
+        } catch (SQLException e) {
+            System.out.println("Error saving history to database: " + e.getMessage());
         }
     }
 
     /**
-     * Prints all saved execution history records.
+     * Prints all saved execution history records from SQLite.
      */
     public void printHistory() {
-        File file = new File(HISTORY_FILE);
+        String sql = """
+                SELECT job_id, job_name, command, status, exit_code, executed_at
+                FROM history
+                ORDER BY id
+                """;
 
-        if (!file.exists()) {
-            System.out.println("No execution history found.");
-            return;
-        }
+        boolean hasHistory = false;
 
-        System.out.println("Execution History:");
+        try (Connection connection = DatabaseManager.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql);
+                ResultSet resultSet = statement.executeQuery()) {
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            String line;
+            System.out.println("Execution History:");
 
-            while ((line = reader.readLine()) != null) {
-                printFormattedHistoryLine(line);
+            while (resultSet.next()) {
+                hasHistory = true;
+
+                System.out.println(
+                        resultSet.getInt("job_id") + " | "
+                                + resultSet.getString("job_name") + " | "
+                                + resultSet.getString("command") + " | "
+                                + resultSet.getString("status") + " | Exit Code: "
+                                + resultSet.getInt("exit_code") + " | "
+                                + resultSet.getString("executed_at"));
             }
 
-        } catch (IOException e) {
-            System.out.println("Error reading history: " + e.getMessage());
+            if (!hasHistory) {
+                System.out.println("No execution history found.");
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Error reading history from database: " + e.getMessage());
         }
-    }
-
-    /**
-     * Formats one saved history line for terminal display.
-     *
-     * Saved format:
-     * jobId|jobName|command|status|exitCode|timestamp
-     *
-     * @param line saved history line from history.txt
-     */
-    private void printFormattedHistoryLine(String line) {
-        String[] parts = line.split("\\|", 6);
-
-        if (parts.length < 6) {
-            System.out.println("Invalid history entry: " + line);
-            return;
-        }
-
-        String jobId = parts[0];
-        String jobName = parts[1];
-        String command = parts[2];
-        String status = parts[3];
-        String exitCode = parts[4];
-        String timestamp = parts[5];
-
-        System.out.println(
-                jobId + " | "
-                        + jobName + " | "
-                        + command + " | "
-                        + status + " | Exit Code: "
-                        + exitCode + " | "
-                        + timestamp
-        );
     }
 
     /**

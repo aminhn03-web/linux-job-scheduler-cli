@@ -8,6 +8,8 @@ import java.util.List;
  */
 public class Main {
 	public static void main(String[] args) {
+		DatabaseManager.initializeDatabase();
+
 		JobRepository repository = new JobRepository();
 		HistoryRepository historyRepository = new HistoryRepository();
 
