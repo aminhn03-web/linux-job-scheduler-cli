@@ -28,12 +28,10 @@ public class CommandExecutor {
             Process process = builder.start();
 
             BufferedReader outputReader = new BufferedReader(
-                    new InputStreamReader(process.getInputStream())
-            );
+                    new InputStreamReader(process.getInputStream()));
 
             BufferedReader errorReader = new BufferedReader(
-                    new InputStreamReader(process.getErrorStream())
-            );
+                    new InputStreamReader(process.getErrorStream()));
 
             String line;
 

@@ -45,6 +45,14 @@ public class Main {
 				historyRepository.printHistory();
 				break;
 
+			case "update":
+				updateJob(args, repository);
+				break;
+
+			case "delete":
+				deleteJob(args, repository);
+				break;
+
 			default:
 				System.out.println("Unknown command: " + command);
 				printHelp();
@@ -155,18 +163,95 @@ public class Main {
 	}
 
 	/**
+	 * Updates a saved job by ID.
+	 *
+	 * Expected command format:
+	 * ./run.sh update <job-id> "<new-job-name>" "<new-linux-command>"
+	 *
+	 * Example:
+	 * ./run.sh update 1 "Show Directory" "pwd"
+	 *
+	 * @param args       command-line arguments entered by the user
+	 * @param repository repository used to update the saved job
+	 */
+	private static void updateJob(String[] args, JobRepository repository) {
+		if (args.length < 4) {
+			System.out.println("Usage: ./run.sh update <job-id> \"<new-job-name>\" \"<new-linux-command>\"");
+			return;
+		}
+
+		int jobId;
+
+		try {
+			jobId = Integer.parseInt(args[1]);
+		} catch (NumberFormatException e) {
+			System.out.println("Invalid job ID. Please enter a number.");
+			return;
+		}
+
+		String newName = args[2];
+		String newCommand = args[3];
+
+		boolean updated = repository.updateJob(jobId, newName, newCommand);
+
+		if (updated) {
+			System.out.println("Job updated successfully.");
+		} else {
+			System.out.println("No job found with ID: " + jobId);
+		}
+	}
+
+	/**
+	 * Deletes a saved job by ID.
+	 *
+	 * Expected command format:
+	 * ./run.sh delete <job-id>
+	 *
+	 * Example:
+	 * ./run.sh delete 1
+	 *
+	 * @param args       command-line arguments entered by the user
+	 * @param repository repository used to delete the saved job
+	 */
+	private static void deleteJob(String[] args, JobRepository repository) {
+		if (args.length < 2) {
+			System.out.println("Usage: ./run.sh delete <job-id>");
+			return;
+		}
+
+		int jobId;
+
+		try {
+			jobId = Integer.parseInt(args[1]);
+		} catch (NumberFormatException e) {
+			System.out.println("Invalid job ID. Please enter a number.");
+			return;
+		}
+
+		boolean deleted = repository.deleteJob(jobId);
+
+		if (deleted) {
+			System.out.println("Job deleted successfully.");
+		} else {
+			System.out.println("No job found with ID: " + jobId);
+		}
+	}
+
+	/**
 	 * Prints available CLI commands and examples.
 	 */
 	private static void printHelp() {
 		System.out.println("Linux Job Scheduler CLI");
 		System.out.println();
 		System.out.println("Commands:");
-		System.out.println("  help\t\t\t\t\tShow available commands");
-		System.out.println("  run \"<linux-command>\"\t\t\tRun a Linux command immediately");
-		System.out.println("  add \"<job-name>\" \"<linux-command>\"\tSave a job");
-		System.out.println("  list\t\t\t\t\tList saved jobs");
-		System.out.println("  run-job <job-id>\t\t\tRun a saved job by ID");
-		System.out.println("  history\t\t\t\tShow execution history");
+		System.out.println("  help\t\t\t\t\t\t\t\tShow available commands");
+		System.out.println("  run \"<linux-command>\"\t\t\t\t\t\tRun a Linux command immediately");
+		System.out.println("  add \"<job-name>\" \"<linux-command>\"\t\t\t\tSave a job");
+		System.out.println("  list\t\t\t\t\t\t\t\tList saved jobs");
+		System.out.println("  run-job <job-id>\t\t\t\t\t\tRun a saved job by ID");
+		System.out.println("  history\t\t\t\t\t\t\tShow execution history");
+		System.out.println("  update <job-id> \"<new-job-name>\" \"<new-linux-command>\"\tUpdate a saved job");
+        System.out.println("  delete <job-id>\t\t\t\t\t\tDelete a saved job");
 		System.out.println();
 		System.out.println("Examples:");
 		System.out.println("  ./run.sh help");
@@ -175,5 +260,7 @@ public class Main {
 		System.out.println("  ./run.sh list");
 		System.out.println("  ./run.sh run-job 1");
 		System.out.println("  ./run.sh history");
+		System.out.println("  ./run.sh update 1 \"Show Directory\" \"pwd\"");
+        System.out.println("  ./run.sh delete 1");
 	}
 }

@@ -91,4 +91,60 @@ public class JobRepository {
 
 		return null;
 	}
+
+	/**
+	 * Updates an existing saved job in the SQLite database.
+	 *
+	 * This method changes both the job name and Linux command for the
+	 * job matching the provided ID.
+	 *
+	 * @param id         ID of the job to update
+	 * @param newName    updated readable job name
+	 * @param newCommand updated Linux shell command
+	 * @return true if a job was updated, false if no matching job was found
+	 */
+	public boolean updateJob(int id, String newName, String newCommand) {
+		String sql = "UPDATE jobs SET name = ?, command = ? WHERE id = ?";
+
+		try (Connection connection = DatabaseManager.getConnection();
+				PreparedStatement statement = connection.prepareStatement(sql)) {
+
+			statement.setString(1, newName);
+			statement.setString(2, newCommand);
+			statement.setInt(3, id);
+
+			int rowsUpdated = statement.executeUpdate();
+			return rowsUpdated > 0;
+
+		} catch (SQLException e) {
+			System.out.println("Error updating job: " + e.getMessage());
+			return false;
+		}
+	}
+
+	/**
+	 * Deletes a saved job from the SQLite database by ID.
+	 *
+	 * This removes the job from the jobs table. Existing execution history
+	 * remains stored so past runs can still be reviewed.
+	 *
+	 * @param id ID of the job to delete
+	 * @return true if a job was deleted, false if no matching job was found
+	 */
+	public boolean deleteJob(int id) {
+		String sql = "DELETE FROM jobs WHERE id = ?";
+
+		try (Connection connection = DatabaseManager.getConnection();
+				PreparedStatement statement = connection.prepareStatement(sql)) {
+
+			statement.setInt(1, id);
+
+			int rowsDeleted = statement.executeUpdate();
+			return rowsDeleted > 0;
+
+		} catch (SQLException e) {
+			System.out.println("Error deleting job: " + e.getMessage());
+			return false;
+		}
+	}
 }
