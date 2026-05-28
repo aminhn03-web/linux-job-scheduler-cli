@@ -16,7 +16,7 @@ public class DatabaseManager {
         try {
             Class.forName("org.sqlite.JDBC");
         } catch (ClassNotFoundException e) {
-            System.out.println("SQLite JDBC driver not found: " + e.getMessage());
+            AppLogger.error("SQLite JDBC driver not found: " + e.getMessage());
         }
     }
 
@@ -61,7 +61,7 @@ public class DatabaseManager {
             statement.execute(createHistoryTable);
 
         } catch (SQLException e) {
-            System.out.println("Error initializing database: " + e.getMessage());
+            AppLogger.error("Error initializing database: " + e.getMessage());
         }
     }
 }

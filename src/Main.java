@@ -58,7 +58,7 @@ public class Main {
 				break;
 
 			default:
-				System.out.println("Unknown command: " + command);
+				AppLogger.error("Unknown command: " + command);
 				printHelp();
 		}
 	}
@@ -112,7 +112,7 @@ public class Main {
 		List<Job> jobs = repository.getAllJobs();
 
 		if (jobs.isEmpty()) {
-			System.out.println("No jobs found.");
+			AppLogger.warning("No jobs found.");
 			return;
 		}
 
@@ -146,14 +146,14 @@ public class Main {
 		try {
 			jobId = Integer.parseInt(args[1]);
 		} catch (NumberFormatException e) {
-			System.out.println("Invalid job ID. Please enter a number.");
+			AppLogger.error("Invalid job ID. Please enter a number.");
 			return;
 		}
 
 		Job job = repository.getJobById(jobId);
 
 		if (job == null) {
-			System.out.println("No job found with ID: " + jobId);
+			AppLogger.warning("No job found with ID: " + jobId);
 			return;
 		}
 
@@ -163,7 +163,7 @@ public class Main {
 		int exitCode = executor.execute(job.getCommand());
 
 		historyRepository.saveExecution(job, exitCode);
-		System.out.println("Execution saved to history.");
+		AppLogger.success("Execution saved to history.");
 	}
 
 	/**
@@ -189,7 +189,7 @@ public class Main {
 		try {
 			jobId = Integer.parseInt(args[1]);
 		} catch (NumberFormatException e) {
-			System.out.println("Invalid job ID. Please enter a number.");
+			AppLogger.error("Invalid job ID. Please enter a number.");
 			return;
 		}
 
@@ -199,9 +199,9 @@ public class Main {
 		boolean updated = repository.updateJob(jobId, newName, newCommand);
 
 		if (updated) {
-			System.out.println("Job updated successfully.");
+			AppLogger.success("Job updated successfully.");
 		} else {
-			System.out.println("No job found with ID: " + jobId);
+			AppLogger.warning("No job found with ID: " + jobId);
 		}
 	}
 
@@ -228,16 +228,16 @@ public class Main {
 		try {
 			jobId = Integer.parseInt(args[1]);
 		} catch (NumberFormatException e) {
-			System.out.println("Invalid job ID. Please enter a number.");
+			AppLogger.error("Invalid job ID. Please enter a number.");
 			return;
 		}
 
 		boolean deleted = repository.deleteJob(jobId);
 
 		if (deleted) {
-			System.out.println("Job deleted successfully.");
+			AppLogger.success("Job deleted successfully.");
 		} else {
-			System.out.println("No job found with ID: " + jobId);
+			AppLogger.warning("No job found with ID: " + jobId);
 		}
 	}
 
@@ -270,14 +270,14 @@ public class Main {
 			jobId = Integer.parseInt(args[1]);
 			intervalSeconds = Integer.parseInt(args[2]);
 		} catch (NumberFormatException e) {
-			System.out.println("Invalid input. Job ID and interval must both be numbers.");
+			AppLogger.error("Invalid input. Job ID and interval must both be numbers.");
 			return;
 		}
 
 		Job job = repository.getJobById(jobId);
 
 		if (job == null) {
-			System.out.println("No job found with ID: " + jobId);
+			AppLogger.warning("No job found with ID: " + jobId);
 			return;
 		}
 

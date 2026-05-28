@@ -35,23 +35,28 @@ public class CommandExecutor {
 
             String line;
 
-            System.out.println("----- Command Output -----");
+            AppLogger.info("Command output:");
             while ((line = outputReader.readLine()) != null) {
                 System.out.println(line);
             }
 
-            System.out.println("----- Command Errors -----");
+            AppLogger.info("Command errors:");
             while ((line = errorReader.readLine()) != null) {
                 System.out.println(line);
             }
 
             exitCode = process.waitFor();
-            System.out.println("Exit Code: " + exitCode);
+
+            if (exitCode == 0) {
+                AppLogger.success("Command completed successfully. Exit Code: " + exitCode);
+            } else {
+                AppLogger.error("Command failed. Exit Code: " + exitCode);
+            }
 
         } catch (IOException e) {
-            System.out.println("Error running command: " + e.getMessage());
+            AppLogger.error("Error running command: " + e.getMessage());
         } catch (InterruptedException e) {
-            System.out.println("Command was interrupted.");
+            AppLogger.error("Command was interrupted.");
             Thread.currentThread().interrupt();
         }
 

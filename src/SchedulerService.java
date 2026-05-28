@@ -45,7 +45,7 @@ public class SchedulerService {
      */
     public void scheduleJob(Job job, int intervalSeconds) {
         if (intervalSeconds <= 0) {
-            System.out.println("Interval must be greater than 0 seconds.");
+            AppLogger.error("Interval must be greater than 0 seconds.");
             return;
         }
 
@@ -53,7 +53,7 @@ public class SchedulerService {
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println();
-            System.out.println("Stopping scheduler...");
+            AppLogger.info("Stopping scheduler...");
             shutdown();
             keepProgramRunning.countDown();
         }));
@@ -73,7 +73,7 @@ public class SchedulerService {
         try {
             keepProgramRunning.await();
         } catch (InterruptedException e) {
-            System.out.println("Main scheduler thread was interrupted.");
+            AppLogger.error("Main scheduler thread was interrupted.");
             Thread.currentThread().interrupt();
         }
     }
@@ -92,7 +92,7 @@ public class SchedulerService {
         int exitCode = commandExecutor.execute(job.getCommand());
         historyRepository.saveExecution(job, exitCode);
 
-        System.out.println("Scheduled execution saved to history.");
+        AppLogger.success("Scheduled execution saved to history.");
         System.out.println();
     }
 

@@ -38,7 +38,7 @@ public class HistoryRepository {
             statement.executeUpdate();
 
         } catch (SQLException e) {
-            System.out.println("Error saving history to database: " + e.getMessage());
+            AppLogger.error("Error saving history to database: " + e.getMessage());
         }
     }
 
@@ -58,7 +58,7 @@ public class HistoryRepository {
                 PreparedStatement statement = connection.prepareStatement(sql);
                 ResultSet resultSet = statement.executeQuery()) {
 
-            System.out.println("Execution History:");
+            AppLogger.info("Execution History:");
 
             while (resultSet.next()) {
                 hasHistory = true;
@@ -73,11 +73,11 @@ public class HistoryRepository {
             }
 
             if (!hasHistory) {
-                System.out.println("No execution history found.");
+                AppLogger.warning("No execution history found.");
             }
 
         } catch (SQLException e) {
-            System.out.println("Error reading history from database: " + e.getMessage());
+            AppLogger.error("Error reading history from database: " + e.getMessage());
         }
     }
 

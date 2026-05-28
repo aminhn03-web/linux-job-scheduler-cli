@@ -33,7 +33,7 @@ public class JobRepository {
 			}
 
 		} catch (SQLException e) {
-			System.out.println("Error reading jobs from database: " + e.getMessage());
+			AppLogger.error("Error reading jobs from database: " + e.getMessage());
 		}
 
 		return jobs;
@@ -55,10 +55,10 @@ public class JobRepository {
 			statement.setString(2, command);
 			statement.executeUpdate();
 
-			System.out.println("Job added: " + name + " -> " + command);
+			AppLogger.success("Job added: " + name + " -> " + command);
 
 		} catch (SQLException e) {
-			System.out.println("Error saving job to database: " + e.getMessage());
+			AppLogger.error("Error saving job to database: " + e.getMessage());
 		}
 	}
 
@@ -86,7 +86,7 @@ public class JobRepository {
 			}
 
 		} catch (SQLException e) {
-			System.out.println("Error finding job: " + e.getMessage());
+			AppLogger.error("Error finding job: " + e.getMessage());
 		}
 
 		return null;
@@ -117,7 +117,7 @@ public class JobRepository {
 			return rowsUpdated > 0;
 
 		} catch (SQLException e) {
-			System.out.println("Error updating job: " + e.getMessage());
+			AppLogger.error("Error updating job: " + e.getMessage());
 			return false;
 		}
 	}
@@ -143,7 +143,7 @@ public class JobRepository {
 			return rowsDeleted > 0;
 
 		} catch (SQLException e) {
-			System.out.println("Error deleting job: " + e.getMessage());
+			AppLogger.error("Error deleting job: " + e.getMessage());
 			return false;
 		}
 	}
