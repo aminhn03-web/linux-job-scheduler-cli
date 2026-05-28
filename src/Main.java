@@ -41,6 +41,10 @@ public class Main {
 				runSavedJob(args, repository, historyRepository);
 				break;
 
+			case "schedule":
+				scheduleJob(args, repository, historyRepository);
+				break;
+
 			case "history":
 				historyRepository.printHistory();
 				break;
@@ -238,6 +242,52 @@ public class Main {
 	}
 
 	/**
+	 * Schedules a saved job to run repeatedly at a fixed interval.
+	 *
+	 * Expected command format:
+	 * ./run.sh schedule <job-id> <interval-seconds>
+	 *
+	 * Example:
+	 * ./run.sh schedule 1 60
+	 *
+	 * @param args              command-line arguments entered by the user
+	 * @param repository        repository used to find saved jobs
+	 * @param historyRepository repository used to save execution history
+	 */
+	private static void scheduleJob(
+			String[] args,
+			JobRepository repository,
+			HistoryRepository historyRepository) {
+		if (args.length < 3) {
+			System.out.println("Usage: ./run.sh schedule <job-id> <interval-seconds>");
+			return;
+		}
+
+		int jobId;
+		int intervalSeconds;
+
+		try {
+			jobId = Integer.parseInt(args[1]);
+			intervalSeconds = Integer.parseInt(args[2]);
+		} catch (NumberFormatException e) {
+			System.out.println("Invalid input. Job ID and interval must both be numbers.");
+			return;
+		}
+
+		Job job = repository.getJobById(jobId);
+
+		if (job == null) {
+			System.out.println("No job found with ID: " + jobId);
+			return;
+		}
+
+		CommandExecutor commandExecutor = new CommandExecutor();
+		SchedulerService schedulerService = new SchedulerService(commandExecutor, historyRepository);
+
+		schedulerService.scheduleJob(job, intervalSeconds);
+	}
+
+	/**
 	 * Prints available CLI commands and examples.
 	 */
 	private static void printHelp() {
@@ -251,7 +301,8 @@ public class Main {
 		System.out.println("  run-job <job-id>\t\t\t\t\t\tRun a saved job by ID");
 		System.out.println("  history\t\t\t\t\t\t\tShow execution history");
 		System.out.println("  update <job-id> \"<new-job-name>\" \"<new-linux-command>\"\tUpdate a saved job");
-        System.out.println("  delete <job-id>\t\t\t\t\t\tDelete a saved job");
+		System.out.println("  delete <job-id>\t\t\t\t\t\tDelete a saved job");
+		System.out.println("  schedule <job-id> <interval-seconds>  Run a saved job repeatedly");
 		System.out.println();
 		System.out.println("Examples:");
 		System.out.println("  ./run.sh help");
@@ -261,6 +312,7 @@ public class Main {
 		System.out.println("  ./run.sh run-job 1");
 		System.out.println("  ./run.sh history");
 		System.out.println("  ./run.sh update 1 \"Show Directory\" \"pwd\"");
-        System.out.println("  ./run.sh delete 1");
+		System.out.println("  ./run.sh delete 1");
+		System.out.println("  ./run.sh schedule 1 60");
 	}
 }
