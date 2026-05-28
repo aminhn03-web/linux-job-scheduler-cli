@@ -1,47 +1,74 @@
 # Linux Job Scheduler CLI
 
-A Java-based Linux command-line job scheduler that executes shell commands, supports task automation, and demonstrates Bash scripting, CLI design, and Linux-based development.
+A Java-based Linux command-line job scheduler that executes shell commands, manages saved jobs, stores data in SQLite, tracks execution history, and supports recurring multithreaded scheduling.
 
 ## Overview
 
-Linux Job Scheduler CLI is a command-line application built in Java and designed to run in a Linux environment. The project supports running Linux shell commands directly from a Java program and capturing the command output, errors, and exit codes.
+Linux Job Scheduler CLI is a command-line application built in Java and designed to run in a Linux environment. The application allows users to create, view, update, delete, run, and schedule Linux shell commands as saved jobs.
 
-The goal of this project is to build a practical software engineering tool that supports saved jobs, recurring task execution, SQLite database persistence, and job history tracking.
+The project demonstrates practical software engineering concepts including command-line interface design, object-oriented programming, SQLite database persistence, process execution, error handling, Bash scripting, and Java multithreading.
 
 ## Features
 
-- Run Linux shell commands from a Java command-line interface
-- Capture standard output from executed commands
-- Capture error output from failed commands
-- Display process exit codes
-- Compile and run the project using Bash scripts
-- Demonstrate Linux-based development through Ubuntu WSL
+- Add saved jobs with a custom name and Linux command
+- List all saved jobs
+- Run a Linux command immediately
+- Run a saved job by ID
+- Update saved job names and commands
+- Delete saved jobs
+- Store job data in SQLite
+- Track job execution history
+- Save command status, exit code, and timestamp
+- Schedule recurring jobs at fixed intervals
+- Run scheduled jobs using Java multithreading
+- Use consistent CLI logging for info, success, warning, and error messages
+- Compile and run the application through Bash scripts
 
 ## Technologies Used
 
 - Java
 - Linux / Ubuntu WSL
 - Bash scripting
-- Git / GitHub
 - SQLite
+- JDBC
+- Git / GitHub
+- Java multithreading
+- `ScheduledExecutorService`
 
 ## Project Structure
 
 ```text
 linux-job-scheduler-cli/
-├── lib/
-├── out/
 ├── scripts/
 │   └── build.sh
 ├── src/
-│   ├── Main.java
+│   ├── AppLogger.java
 │   ├── CommandExecutor.java
+│   ├── DatabaseManager.java
+│   ├── HistoryRepository.java
 │   ├── Job.java
 │   ├── JobRepository.java
+│   ├── Main.java
 │   └── SchedulerService.java
 ├── run.sh
 ├── README.md
 └── .gitignore
+```
+
+## Setup
+
+Install SQLite and the SQLite JDBC driver:
+
+```bash
+sudo apt update
+sudo apt install sqlite3 libxerial-sqlite-jdbc-java libslf4j-java -y
+```
+
+Make sure the scripts are executable:
+
+```bash
+chmod +x run.sh
+chmod +x scripts/build.sh
 ```
 
 ## How to Build and Run
@@ -52,53 +79,125 @@ From the project directory, run:
 ./run.sh help
 ```
 
-This compiles the Java source files and displays the available commands.
+The `run.sh` script automatically compiles the Java source files and runs the application.
 
-## Example Commands
+## Commands
 
-Run the help command:
+Show available commands:
 
 ```bash
 ./run.sh help
 ```
 
-Run the Linux `pwd` command:
+Run a Linux command immediately:
 
 ```bash
 ./run.sh run "pwd"
-```
-
-Run the Linux `ls -la` command:
-
-```bash
 ./run.sh run "ls -la"
-```
-
-Run the Linux `date` command:
-
-```bash
 ./run.sh run "date"
 ```
+
+Add a saved job:
+
+```bash
+./run.sh add "Show Date" "date"
+./run.sh add "List Files" "ls -la"
+```
+
+List saved jobs:
+
+```bash
+./run.sh list
+```
+
+Run a saved job by ID:
+
+```bash
+./run.sh run-job 1
+```
+
+Update a saved job:
+
+```bash
+./run.sh update 1 "Show Current Directory" "pwd"
+```
+
+Delete a saved job:
+
+```bash
+./run.sh delete 1
+```
+
+View job execution history:
+
+```bash
+./run.sh history
+```
+
+Schedule a saved job to run repeatedly:
+
+```bash
+./run.sh schedule 1 10
+```
+
+This runs job ID `1` every 10 seconds. Press `Ctrl + C` to stop the scheduler.
 
 ## Example Output
 
 ```text
------ Command Output -----
-/home/username/linux-job-scheduler-cli
------ Command Errors -----
-Exit Code: 0
+[SUCCESS] Job added: Show Date -> date
+
+Saved Jobs:
+1. Show Date -> date
 ```
 
-## Roadmap
+```text
+Running job: 1. Show Date -> date
+[INFO] Command output:
+Tue May 28 14:30:15 EDT 2026
+[INFO] Command errors:
+[SUCCESS] Command completed successfully. Exit Code: 0
+[SUCCESS] Execution saved to history.
+```
 
-- Add job creation using an `add` command
-- Add job listing using a `list` command
-- Store job metadata in SQLite
-- Track job execution history
-- Add recurring scheduling logic
-- Support multithreaded job execution
-- Add detailed logging and reports
+```text
+[INFO] Execution History:
+1 | Show Date | date | SUCCESS | Exit Code: 0 | 2026-05-28 14:30:15
+```
 
-## Purpose
+## Database
 
-This project demonstrates practical software engineering skills in a Linux environment, including Java development, command-line interface design, Bash scripting, process execution, error handling, database persistence, and task automation.
+The application uses SQLite for persistent storage.
+
+The database file is created locally as:
+
+```text
+scheduler.db
+```
+
+The database contains two main tables:
+
+```text
+jobs
+history
+```
+
+The `jobs` table stores saved job names and commands.
+
+The `history` table stores job execution records, including status, exit code, and execution timestamp.
+
+The database file is excluded from GitHub using `.gitignore` because it is local runtime data.
+
+## Multithreaded Scheduling
+
+Recurring jobs are scheduled using Java’s `ScheduledExecutorService`.
+
+This allows scheduled jobs to run on a background scheduler thread at fixed intervals instead of relying on a manual infinite loop. This design is cleaner, more scalable, and better reflects real software engineering practices.
+
+## Future Improvements
+
+- Support multiple scheduled jobs running at the same time
+- Add more detailed filtering for execution history
+- Add job enable/disable status
+- Add configuration options for database location
+- Add automated tests
